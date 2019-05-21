@@ -1,0 +1,23 @@
+//
+// Created by fu on 3/2/18.
+//
+
+#ifndef SPEECH_C_DEMO_COMMON_H
+#define SPEECH_C_DEMO_COMMON_H
+
+/**
+ * @brief define RETURN_CODE
+ */
+typedef enum RETURN_CODE {
+    RETURN_OK = 0,
+    RETURN_ERROR = 1,
+    ERROR_TOKEN_CURL = 13,
+    ERROR_TOKEN_PARSE_ACCESS_TOKEN = 15,
+    ERROR_TOKEN_PARSE_SCOPE = 16,
+    ERROR_ASR_FILE_NOT_EXIST = 101,
+    ERROR_ASR_CURL = 102
+} RETURN_CODE;
+
+
+
+#endif //SPEECH_C_DEMO_COMMON_H
