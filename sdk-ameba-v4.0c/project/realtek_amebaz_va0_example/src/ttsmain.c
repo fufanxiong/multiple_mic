@@ -37,6 +37,8 @@ extern char token[MAX_TOKEN_SIZE];
 
 QueueHandle_t	recv_tts_queue;
 
+extern int parse_mp3_frame(char *aux_buf,int aux_len);
+
 RETURN_CODE fill_config_tts(struct tts_config *config) {
     // 填写网页上申请的appkey 如 g_api_key="g8eBUMSokVB1BHGmgxxxxxx"
     //char api_key[] = "4E1BG9lTnlSeIf1NQFlrSq6h";
@@ -115,9 +117,10 @@ RETURN_CODE run_tts(struct tts_config *config, const char *token)
 		//char tmp_data[256];
 		struct httpc_conn *conn = NULL;
 		//uint8_t buf[1024];
-		char *buf = NULL;
+		unsigned char *buf = NULL;
 		unsigned char result[MAX_RESULT_SIZE]={0};
 		int size;
+		
 		RETURN_CODE res = RETURN_OK;
 
 		buf = (char *)malloc(1024);
@@ -200,6 +203,8 @@ RETURN_CODE run_tts(struct tts_config *config, const char *token)
 							if(audio_format != NULL)
 							{
 								//we need save which format for decode
+								HTTP_RECV_INFO  tmp_entity;
+								LPHTTP_RECV_INFO tmp_info = &tmp_entity;
 								printf("start read audio data\n");
 								memset(buf, 0, sizeof(buf));
 								do
@@ -210,7 +215,10 @@ RETURN_CODE run_tts(struct tts_config *config, const char *token)
 									if(read_size <= 0)
 										break;
 									size -= read_size;
-									xQueueSend(recv_tts_queue,buf,1000/portTICK_RATE_MS);
+									tmp_info->recv_addr = buf;
+									tmp_info->len = read_size;
+									printf("read data size=%d,data addr=%p\n",tmp_info->len,tmp_info->recv_addr);
+									xQueueSend(recv_tts_queue,(void *)&tmp_info,1000/portTICK_RATE_MS);
 								}while(size > 0);
 							}
 #if 0							
@@ -329,12 +337,17 @@ int two_urlencode_uft_8(unsigned char *code_transfer,unsigned char *des_transfer
 
 void tts_recv_task(void *param)
 {
-	char pbuf[1024];
+	HTTP_RECV_INFO  point_entity;
+	LPHTTP_RECV_INFO tmp_recv = &point_entity;
+	unsigned char pbuf[1024];
 	while(1)
 	{
-		if(xQueueReceive(recv_tts_queue,pbuf,5000/portTICK_RATE_MS))
+		if(xQueueReceive(recv_tts_queue,&tmp_recv,5000/portTICK_RATE_MS))
 		{
-			printf("queue has data push\n");
+			printf("queue has data push data len=%d,recv addr=%p\n",tmp_recv->len,tmp_recv->recv_addr);
+			memcpy(pbuf,tmp_recv->recv_addr,tmp_recv->len);
+			printf("pbuf recv0=%d,recv1=%d,recv2=%d,recv3=%d\n",pbuf[0],pbuf[1],pbuf[2],pbuf[3]);
+			parse_mp3_frame(pbuf,tmp_recv->len);
 		}
 		else
 		{
@@ -347,7 +360,9 @@ void tts_recv_task(void *param)
 void init_queue_to_recv_tts(void)
 {
 	int SetQueueLength = 1;
-	int SetItemSize = 1024;
+	int SetItemSize;
+	SetItemSize = sizeof(LPHTTP_RECV_INFO);
+	printf("set item size=%d\n",SetItemSize);
 	recv_tts_queue = xQueueCreate(SetQueueLength,SetItemSize);
 
 	if(recv_tts_queue != NULL)

@@ -49,6 +49,8 @@ extern int one_urlencode_utf_8(unsigned char *code_transfer,unsigned char *des_t
 
 extern void init_queue_to_recv_tts(void);
 
+extern void init_queue_to_recv_parse_mp3(void);
+
 #if 0
 char voice_data[] = {
 0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x2d ,0x00 ,0x32 ,0x00 ,0x38 ,0x00 ,0x47 ,0x00 ,0x2c ,0x00 ,0x19,		\
@@ -524,6 +526,9 @@ void asr_baidu_main(void *param)
 
 	//init a queue to recv tts
 	init_queue_to_recv_tts();
+
+	//enable a mp3 data recv queue
+	init_queue_to_recv_parse_mp3();
 
 	while(rtw_down_sema(&init_set_tts) == pdTRUE)
 	{

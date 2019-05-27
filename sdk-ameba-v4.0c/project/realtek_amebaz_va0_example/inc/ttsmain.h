@@ -23,6 +23,13 @@ struct tts_config {
 	char format[4];
 };
 
+typedef struct
+{
+	//void *recv_addr;
+	void *recv_addr;
+	int len;
+}HTTP_RECV_INFO,*LPHTTP_RECV_INFO;
+
 RETURN_CODE run_start_tts();
 
 RETURN_CODE fill_config_tts(struct tts_config *config);
